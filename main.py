@@ -4,17 +4,22 @@ import discord
 import requests
 import json
 import random
-from always_on import always_on
+import praw
 
 client = discord.Client()
 my_token = os.environ['TOKEN']
+reddit_secret = os.environ['reddit_key']
+reddit = praw.Reddit(client_id='HtqTteWA0F12ntEkYYJ0fQ',
+                     client_secret=reddit_secret,
+                     username='Gullible_Location',
+                     password='wGrDp!7b!8GL#/J',
+                     user_agent='auxiliator')
 
 sad_words = ["sad", "depressed", "misserable", "down", "kms", "fuck"]
 
 basic_cheers = ["cheer up", "King", "heads up king", "dont cry girl"]
 
-
-if "responding" in db.keys():
+if "responding" not in db.keys():
     db["responding"] = True
 
 
@@ -76,7 +81,7 @@ def get_ye_quote():
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
-    
+
     print(db.keys())
 
 
@@ -118,17 +123,16 @@ async def on_message(message):
         if cheers in db.keys():
             cheers = db["cheers"]
         await message.channe.send(cheers)
-    
-    if message.content.lower.startswith("!responding"):
-        value = message.content.split("!responding ",1)[1]
+
+    if message.content.lower().startswith("!responding"):
+        value = message.content.split("!responding ", 1)[1]
 
         if value.lower():
-          db["responding"] = True
+            db["responding"] = True
         else:
-          db["respoding"] = False
-        
-        await message.channel.send("Responses are on now")
+            db["respoding"] = False
 
+        await message.channel.send("Responses are on now")
 
     if message.content.lower().startswith('!nasaapod'):
         img = get_nasa_img()
@@ -143,6 +147,25 @@ async def on_message(message):
         ye_quote = get_ye_quote()
         await message.channel.send(ye_quote)
 
+    if message.content.lower().startswith('!reddit'):
+        # sub = message.content.split('!reddit', 1)[1]
+        subreddit = reddit.subreddit("memes")
+        all_subs = []
+        top_python = subreddit.hot(limit=10)
 
-always_on()
+        for values in top_python:
+          all_subs.append(values)
+
+        random_sub = random.choice(all_subs)
+
+        name_post = random_sub.title
+        url_post = random_sub.url
+
+        embeded_message = discord.Embed(title=name_post)
+
+        embeded_message.set_image(url=url_post)
+
+        await message.channel.send(embed=embeded_message)
+
+
 client.run(my_token)
