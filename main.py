@@ -5,6 +5,7 @@ import requests
 import json
 import random
 import praw
+from Keep_running import keep_running
 
 client = discord.Client()
 my_token = os.environ['TOKEN']
@@ -63,7 +64,6 @@ def get_weather(city):
         "https://api.openweathermap.org/data/2.5/weather?q=" + city +
         "&appid=" + weather_key)
     json_data = json.loads(response.text)
-    print(json_data.get('weather')[0])
     weather = "The weather in " + city + " is " + (
         json_data.get('weather')
     )[0]['description'] + " with average temperature being " + format(
@@ -91,7 +91,7 @@ async def on_message(message):
         return
 
     if message.content.lower().startswith('!hello'):
-        await message.channel.send('Hello!')
+        await message.channel.send(f"Hello! {message.author.mention}")
 
     if message.content.lower().startswith('!inspire'):
         quote = get_quote()
@@ -120,7 +120,7 @@ async def on_message(message):
 
     if message.content.lower().startswith('!list'):
         cheers = []
-        if cheers in db.keys():
+        if "cheers" in db.keys():
             cheers = db["cheers"]
         await message.channe.send(cheers)
 
@@ -139,7 +139,7 @@ async def on_message(message):
         await message.channel.send(img)
 
     if message.content.lower().startswith('!weather'):
-        city = message.content.split('!weather', 1)[1]
+        city = message.content.split('!weather ', 1)[1]
         weather = get_weather(city)
         await message.channel.send(weather)
 
@@ -148,24 +148,40 @@ async def on_message(message):
         await message.channel.send(ye_quote)
 
     if message.content.lower().startswith('!reddit'):
-        # sub = message.content.split('!reddit', 1)[1]
-        subreddit = reddit.subreddit("memes")
-        all_subs = []
-        top_python = subreddit.hot(limit=10)
+      sub = message.content.split('!reddit ',1)[1]
+      subreddit = reddit.subreddit(sub)
 
-        for values in top_python:
-          all_subs.append(values)
+      all_subs=[]
+      top_subs=subreddit.hot(limit=100)
 
-        random_sub = random.choice(all_subs)
+      for item in top_subs:
+        all_subs.append(item)
 
-        name_post = random_sub.title
-        url_post = random_sub.url
+      random_sub = random.choice(all_subs)
 
-        embeded_message = discord.Embed(title=name_post)
+      name_post = random_sub.title
+      url_post = random_sub.url
 
-        embeded_message.set_image(url=url_post)
+      embeded_message = discord.Embed(title=name_post)
 
-        await message.channel.send(embed=embeded_message)
+      embeded_message.set_image(url = url_post)
+
+      await message.channel.send(embed = embeded_message)
 
 
+
+keep_running()
 client.run(my_token)
+
+
+
+
+
+
+
+
+
+
+
+
+
